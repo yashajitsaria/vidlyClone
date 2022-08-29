@@ -1,32 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
-
-const Genre = mongoose.model('Genre', new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-        minLength: 5,
-        maxLength: 50
-    }
-}));
+const { Genre } = require('../models/genres');
 
 router.get('/', async (req, res) => {
     const genres = await Genre.find().sort('name');
     res.send(genres);
 })
 
-router.get('/:id', async(req, res) => {
+router.get('/:id', async (req, res) => {
     const genre = await Genre.findById(req.params.id);
-    // const genre = genres.find((c) => c.id === parseInt(req.params.id));
     if (!genre) return res.status(404).send('Genre Not Found.');
     res.send(genre);
 })
 
 router.post('/', async (req, res) => {
-    // const genreExists = await Genre.find({ name: req.body.name });
-    // if (genreExists) return res.status(403).send('Access Denied: Genre already exist.');
-
     let genre = new Genre({
         name: req.body.name
     })
