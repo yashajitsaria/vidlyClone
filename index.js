@@ -5,6 +5,7 @@ const genres = require("./routes/genres");
 const customers = require('./routes/customers');
 const users = require('./routes/users');
 const mongoose = require('mongoose');
+const auth = require('./routes/auth');
 
 //connecting to database
 mongoose.connect('mongodb://localhost/vidly')
@@ -18,6 +19,7 @@ app.use('/', home);
 app.use('/api/genres', genres);
 app.use('/api/customers', customers);
 app.use('/api/users', users);
+app.use('/api/auth', auth);
 
 //connecting to port
 const port = process.env.PORT || 3000;
