@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { User, validate } = require('../models/users');
+const { User, validate } = require('../models/user');
 const mongoose = require('mongoose');
 
 router.post('/', async (req, res) => {
