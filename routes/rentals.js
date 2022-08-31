@@ -1,27 +1,41 @@
-const { Rental, validate } = require('../models/rentals');
-const { Movie } = require('../models/movies');
-const { Customer } = require('../models/customers');
-const express = require('express');
-const mongoose = require('mongoose');
-const { custom } = require('joi');
+const { Rental, validate } = require("../models/rental");
+const { Movie } = require("../models/movie");
+const { Customer } = require("../models/customer");
+const mongoose = require("mongoose");
+const Fawn = require("fawn");
+const express = require("express");
 const router = express.Router();
 
-router.get('/', async (req, res) => {
-    const rentals = await Rental.find().sort('-dateOut');
-    res.send(rentals);
-})
+Fawn.init(mongoose);
 
-router.post('/', async (req, res) => {
+router.get("/", async (req, res) => {
+    const rentals = await Rental.find()
+        .select("-__v")
+        .sort("-dateOut");
+    res.send(rentals);
+});
+
+router.get("/:id", async (req, res) => {
+    const rental = await Rental.findById(req.params.id).select("-__v");
+
+    if (!rental)
+        return res.status(404).send("The rental with the given ID was not found.");
+
+    res.send(rental);
+});
+
+router.post("/", async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     const customer = await Customer.findById(req.body.customerId);
-    if (!customer) return res.status(400).send('Invalid Customer');
+    if (!customer) return res.status(400).send("Invalid customer.");
 
-    const movie = Movie.findById(req.body.movieId);
-    if (!movie) return res.status(400).send('Invalid Movie');
+    const movie = await Movie.findById(req.body.movieId);
+    if (!movie) return res.status(400).send("Invalid movie.");
 
-    if (movie.numberInStock === 0) return res.status(400).send('Movie not found');
+    if (movie.numberInStock === 0)
+        return res.status(400).send("Movie not in stock.");
 
     let rental = new Rental({
         customer: {
@@ -36,13 +50,22 @@ router.post('/', async (req, res) => {
         }
     });
 
-    rental = await rental.save();
+    try {
+        new Fawn.Task()
+            .save("rentals", rental)
+            .update(
+                "movies",
+                { _id: movie._id },
+                {
+                    $inc: { numberInStock: -1 }
+                }
+            )
+            .run();
 
-    movie.numberInStock--;
-    movie.save();
+        res.send(rental);
+    } catch (ex) {
+        res.status(500).send("Something failed.");
+    }
+});
 
-    res.send(rental);
-
-    genre = await genre.save();
-    res.send(genre);
-})
+module.exports = router;
