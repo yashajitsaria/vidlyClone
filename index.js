@@ -1,5 +1,7 @@
 const express = require('express');
+require('express-async-errors');
 const config = require('config');
+const error = require('./middleware/error');
 const app = express();
 const home = require('./routes/home');
 const genres = require("./routes/genres");
@@ -27,6 +29,8 @@ app.use('/api/genres', genres);
 app.use('/api/customers', customers);
 app.use('/api/users', users);
 app.use('/api/auth', auth);
+
+app.use(error);
 
 //connecting to port
 const port = process.env.PORT || 3000;
