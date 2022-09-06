@@ -6,6 +6,7 @@ const { func } = require("joi");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
+    throw new Error('could not get the genres');
     const genres = await Genre.find()
         .select("-__v")
         .sort("name");
